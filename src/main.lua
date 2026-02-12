@@ -4,6 +4,13 @@ import "CoreLibs/timer"
 import "CoreLibs/ui"
 
 local a = import("async.lua")
+local secrets = import("secrets.lua")
+assert(secrets.user)
+assert(secrets.api_key)
+
+local URL <const> = string.format(
+    "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=%s&api_key=%s&format=json&limit=1",
+    secrets.user, secrets.api_key)
 
 function playdate.update()
     playdate.timer.updateTimers()
@@ -15,6 +22,12 @@ end
 
 -- async functions
 local sleep = a.wrap(playdate.timer.new)
+
+local dispatch = a.wrap(function(fn, cb)
+    playdate.timer.new(0, function()
+        return cb(fn())
+    end)
+end)
 
 local input = a.wrap(function(name, cb)
     playdate.inputHandlers.push({
@@ -61,52 +74,26 @@ end)
 
 -- main async function
 local main = a.sync(function()
-    print("wait for network")
+    playdate.display.setRefreshRate(10)
+
+    print("wait for network on")
     local err = a.wait(a.wrap(playdate.network.setEnabled)(true))
     if err then
         printf("network enable error: %s", err)
         return
     end
 
-    print("press A for spotify test")
+    printf("request network access")
+    a.wait(dispatch(playdate.network.http.requestAccess))
+
+    print("press A for last.fm test")
     a.wait(input("AButtonDown"))
 
-    local data = a.wait(fetch("https://api.spotify.com/v1/me/top/tracks?time_range=long_term&limit=5",
-        {
-            headers = {
-                Authorization =
-                "Bearer BQCf1r2gKu5IuF3f_lj3GzxIr9A3iVi5NPbVOWWIosCEvNBCdCzMneAkDGG_nrxJVc6-ORaGaGhBJ2OtJi2bTry0kGZXuJoMCH3UIHd0tzSpQ3oSHinMMV-zs8Xg5WPkkOQm1a1T21F131V6A6hsSa7uTOmm9JtyPohMeug2_2GyGULZenDkyP3JR7SlMZAa7bi2dKroywtYZSCYmBQUGyJ1ohvIAfH3mtlxaAkaMckpsW8X6d9qhMvSkobNY2Afi8sxaUHA3Io0wUv79nGkqz56_KqRuz9dE578jU3MekqIWg",
-            }
-        }))
+    local data = a.wait(fetch(URL))
     if data then
         printTable(json.decode(data))
     else
-        print("no data from spotify")
-    end
-
-    print("press A for HTTP GET test")
-    a.wait(input("AButtonDown"))
-
-    local data = a.wait(fetch("https://httpbin.org/get"))
-    if data then
-        printTable(json.decode(data))
-    end
-
-    print("press A for HTTP POST test")
-    a.wait(input("AButtonDown"))
-
-    local data = a.wait(fetch("https://httpbin.org/post", {
-        method = "POST",
-        headers = {
-            ["Content-Type"] = "application/json"
-        },
-        body = json.encode({
-            username = "admin",
-            password = "admin"
-        })
-    }))
-    if data then
-        printTable(json.decode(data))
+        print("no data from last.fm")
     end
 
     for i = 0, math.huge do
