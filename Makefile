@@ -2,7 +2,7 @@ SDK = $(HOME)/Developer/PlaydateSDK
 PDC = $(SDK)/bin/pdc
 SIM = open -a "Playdate Simulator"
 
-PRODUCT = PlayDate.fm.pdx
+PRODUCT = SpotiDate.pdx
 SOURCE = src
 
 .PHONY: build run clean
