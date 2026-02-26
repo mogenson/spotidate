@@ -1,9 +1,7 @@
 import("CoreLibs/graphics")
-import("CoreLibs/object")
 import("CoreLibs/timer")
 import("CoreLibs/ui")
-
-playdate.display.setRefreshRate(10)
+import("CoreLibs/string")
 
 a = import("async")
 import("fetch")
@@ -12,6 +10,7 @@ import("assert")
 
 local secrets = import("secrets")
 local spotify = import("spotify")
+local blitline = import("blitline")
 
 function playdate.update()
     playdate.timer.updateTimers()
@@ -48,15 +47,36 @@ local main = a.sync(function()
     a.wait(dispatch(playdate.network.http.requestAccess))
 
     a.wait(spotify:init(secrets))
+    blitline:init(secrets)
 
     print("press A for Spotify test")
     a.wait(input("AButtonDown"))
 
+    local image_url = "" -- only convert new images
+
     for i = 0, math.huge do
         printf("tick %d", i)
-        a.wait(spotify:get_currently_playing())
+        local track = a.wait(spotify:get_currently_playing())
+        if track then
+            printf("currently playing song: %s", track.song)
+            printf("currently playing artist: %s", track.artist)
+            if image_url ~= track.image then
+                image_url = track.image
+                printf("converting image: %s", image_url)
+                local image_data = a.wait(blitline:convert_image(image_url))
+                if not image_data then
+                    print("no image data")
+                else
+                    printf("image data size %d, header %s", #image_data, image_data:sub(1, 3))
+                end
+            end
+        else
+            print("no currently playing track")
+            -- draw a "not playing" message on screen
+        end
         a.wait(sleep(10000))
     end
 end)
 
+playdate.display.setRefreshRate(10)
 a.run(main())

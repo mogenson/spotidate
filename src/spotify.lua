@@ -4,20 +4,6 @@ return {
     client_secret = nil,
     refresh_token = nil,
 
-    val = nil,
-
-    set = a.sync(function(self, val)
-        print("val ", val)
-        print("self.val ", self.val)
-        self.val = val
-        print("self.val ", self.val)
-    end),
-
-    get = a.sync(function(self)
-        print("self.val ", self.val)
-        return self.val
-    end),
-
     init = a.sync(function(self, secrets)
         self.client_id = assert(secrets.client_id)
         self.client_secret = assert(secrets.client_secret)
@@ -34,7 +20,7 @@ return {
         }
         ))
         if status ~= 200 then
-            printf("failed to refresh token, error: %s, status: %d", error, status)
+            printf("failed to refresh token, error: %s, status: %d", response, status)
             return
         end
 
@@ -53,10 +39,13 @@ return {
                 print("spotify is not currently playing any track")
                 return nil
             elseif status == 200 then
-                -- TODO return structured song, artist, image_url
                 local content = json.decode(response)
-                printTable(content)
-                return content
+                --printTable(content)
+                return {
+                    song = content.item.name,
+                    artist = content.item.artists[1].name,    -- first artist
+                    image = content.item.album.images[1].url, -- biggest album image
+                }
             else
                 printf("error fetching currently playing track: %s", response)
                 return nil
