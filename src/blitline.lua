@@ -12,7 +12,7 @@ return {
             '{"application_id":"%s","src":"%s","functions":[{"name":"resize_to_fill","params":{"width":200,"height":200},"functions":[{"name":"convert_command","params":{"-dither":"FloydSteinberg","-monochrome":"","-colors":"2"},"save":{"image_identifier":"%s","extension":".bmp"}}]}]}',
             self.app_id, url, playdate.string.UUID(16))
 
-        local response, status = a.wait(fetch("http://api.blitline.com/job", {
+        local response, status = a.wait(fetch("https://api.blitline.com/job", {
             method = "POST",
             headers = "Content-Type: application/json",
             body = body,

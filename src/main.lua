@@ -7,6 +7,8 @@ a = import("async")
 import("fetch")
 import("printf")
 import("assert")
+import("render")
+
 
 local secrets = import("secrets")
 local spotify = import("spotify")
@@ -67,7 +69,8 @@ local main = a.sync(function()
                 if not image_data then
                     print("no image data")
                 else
-                    printf("image data size %d, header %s", #image_data, image_data:sub(1, 3))
+                    printf("image data size %d", #image_data)
+                    render(image_data)
                 end
             end
         else

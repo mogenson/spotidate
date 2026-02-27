@@ -12,6 +12,7 @@ return {
     end),
 
     refresh_access_token = a.sync(function(self)
+        print("refreshing spotify token")
         local response, status = a.wait(fetch("https://accounts.spotify.com/api/token", {
             method = "POST",
             headers = "Content-Type: application/x-www-form-urlencoded",
