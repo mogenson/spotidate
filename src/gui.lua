@@ -1,6 +1,5 @@
 local X = 210
 local Y = 10
-local BLANK_LINE = "                     "
 
 return {
     draw_splash = function()
@@ -11,17 +10,26 @@ return {
 
     draw_song = function(song)
         playdate.graphics.drawText("*Song:*", X, Y + 30)
-        playdate.graphics.drawText(song .. BLANK_LINE, X, Y + 50)
+        playdate.graphics.setColor(playdate.graphics.kColorWhite)
+        playdate.graphics.fillRect(X, Y + 50, 400 - X, 20)
+        playdate.graphics.setColor(playdate.graphics.kColorBlack)
+        playdate.graphics.drawText(song, X, Y + 50)
     end,
 
     draw_artist = function(artist)
         playdate.graphics.drawText("*Artist:*", X, Y + 80)
-        playdate.graphics.drawText(artist .. BLANK_LINE, X, Y + 100)
+        playdate.graphics.setColor(playdate.graphics.kColorWhite)
+        playdate.graphics.fillRect(X, Y + 100, 400 - X, 20)
+        playdate.graphics.setColor(playdate.graphics.kColorBlack)
+        playdate.graphics.drawText(artist, X, Y + 100)
     end,
 
     draw_album = function(album)
         playdate.graphics.drawText("*Album:*", X, Y + 130)
-        playdate.graphics.drawText(album .. BLANK_LINE, X, Y + 150)
+        playdate.graphics.setColor(playdate.graphics.kColorWhite)
+        playdate.graphics.fillRect(X, Y + 150, 400 - X, 20)
+        playdate.graphics.setColor(playdate.graphics.kColorBlack)
+        playdate.graphics.drawText(album, X, Y + 150)
     end,
 
     draw_bmp = function(bmp)

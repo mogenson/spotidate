@@ -45,6 +45,7 @@ return {
                 return {
                     song = content.item.name,
                     artist = content.item.artists[1].name,    -- first artist
+                    album = content.item.album.name,
                     image = content.item.album.images[1].url, -- biggest album image
                 }
             else

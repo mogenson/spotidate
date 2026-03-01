@@ -4,9 +4,9 @@ import("CoreLibs/ui")
 import("CoreLibs/string")
 
 a = import("async")
-import("fetch")
 import("printf")
 import("assert")
+import("fetch")
 
 local secrets = import("secrets")
 local spotify = import("spotify")
@@ -66,6 +66,9 @@ local main = a.sync(function()
         if track then
             printf("currently playing song: %s", track.song)
             printf("currently playing artist: %s", track.artist)
+            gui.draw_song(track.song)
+            gui.draw_artist(track.artist)
+            gui.draw_album(track.album)
             if image_url ~= track.image then
                 image_url = track.image
                 printf("converting image: %s", image_url)
