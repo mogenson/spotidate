@@ -7,12 +7,11 @@ a = import("async")
 import("fetch")
 import("printf")
 import("assert")
-import("render")
-
 
 local secrets = import("secrets")
 local spotify = import("spotify")
 local blitline = import("blitline")
+local gui = import("gui")
 
 function playdate.update()
     playdate.timer.updateTimers()
@@ -45,6 +44,11 @@ local main = a.sync(function()
         return
     end
 
+    gui.draw_splash()
+    gui.draw_song("Unknown Song")
+    gui.draw_artist("Unknown Artist")
+    gui.draw_album("Unknown Album")
+
     print("request network access")
     a.wait(dispatch(playdate.network.http.requestAccess))
 
@@ -70,7 +74,7 @@ local main = a.sync(function()
                     print("no image data")
                 else
                     printf("image data size %d", #image_data)
-                    render(image_data)
+                    gui.draw_bmp(image_data)
                 end
             end
         else
