@@ -11,7 +11,9 @@ import("fetch")
 local secrets = import("secrets")
 local spotify = import("spotify")
 local blitline = import("blitline")
-local gui = import("gui")
+local draw = import("draw")
+
+local TITLE = "*Now Playing* %s"
 
 function playdate.update()
     playdate.timer.updateTimers()
@@ -37,6 +39,9 @@ end)
 
 -- main async function
 local main = a.sync(function()
+    playdate.display.setRefreshRate(10)
+    playdate.setAutoLockDisabled(true)
+
     print("wait for network on")
     local err = a.wait(a.wrap(playdate.network.setEnabled)(true))
     if err then
@@ -44,10 +49,8 @@ local main = a.sync(function()
         return
     end
 
-    gui.draw_splash()
-    gui.draw_song("Unknown Song")
-    gui.draw_artist("Unknown Artist")
-    gui.draw_album("Unknown Album")
+    draw:splash()
+    draw:title(TITLE:format(""))
 
     print("request network access")
     a.wait(dispatch(playdate.network.http.requestAccess))
@@ -55,20 +58,21 @@ local main = a.sync(function()
     a.wait(spotify:init(secrets))
     blitline:init(secrets)
 
-    print("press A for Spotify test")
-    a.wait(input("AButtonDown"))
+    -- print("press A for Spotify test")
+    -- a.wait(input("AButtonDown"))
 
     local image_url = "" -- only convert new images
 
-    for i = 0, math.huge do
-        printf("tick %d", i)
+    while true do
+        draw:title(TITLE:format("..."))
+        print("fetch currently playing track")
         local track = a.wait(spotify:get_currently_playing())
         if track then
             printf("currently playing song: %s", track.song)
             printf("currently playing artist: %s", track.artist)
-            gui.draw_song(track.song)
-            gui.draw_artist(track.artist)
-            gui.draw_album(track.album)
+            draw:song(track.song)
+            draw:artist(track.artist)
+            draw:album(track.album)
             if image_url ~= track.image then
                 image_url = track.image
                 printf("converting image: %s", image_url)
@@ -77,16 +81,18 @@ local main = a.sync(function()
                     print("no image data")
                 else
                     printf("image data size %d", #image_data)
-                    gui.draw_bmp(image_data)
+                    draw:image(image_data)
                 end
             end
         else
             print("no currently playing track")
-            -- draw a "not playing" message on screen
+            draw:splash()
         end
-        a.wait(sleep(10000))
+        for i = 10, 1, -1 do
+            draw:title(TITLE:format(i % 2 == 0 and "." or ""))
+            a.wait(sleep(1000)) -- sleep 1 second
+        end
     end
 end)
 
-playdate.display.setRefreshRate(10)
 a.run(main())

@@ -12,7 +12,10 @@ return {
 
         local response, status = a.wait(fetch("http://api.blitline.com/job", {
             method = "POST",
-            headers = "Content-Type: application/json",
+            headers = {
+                ["Content-Type"] = "application/json",
+                ["Connection"]   = "close"
+            },
             body = body,
         }))
 
@@ -22,6 +25,10 @@ return {
         end
 
         local content = json.decode(response)
+        local job_id = content.results.job_id
+
+        -- this blocks until the conversion is complete
+        a.wait(fetch(string.format("http://cache.blitline.com/listen/%s", job_id)))
 
         local result = content.results.images[1].s3_url
         printf("fetching image data from s3 url: %s", result)

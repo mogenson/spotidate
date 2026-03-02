@@ -2,37 +2,48 @@ local X = 210
 local Y = 10
 
 return {
-    draw_splash = function()
-        playdate.graphics.drawText("*Now Playing*", X + 40, Y)
-        local splash = playdate.graphics.image.new("splash")
-        splash:draw(0, 0)
+    clear = function(x, y, w, h)
+        playdate.graphics.setColor(playdate.graphics.kColorWhite)
+        playdate.graphics.fillRect(x, y, w, h)
+        playdate.graphics.setColor(playdate.graphics.kColorBlack)
     end,
 
-    draw_song = function(song)
-        playdate.graphics.drawText("*Song:*", X, Y + 30)
-        playdate.graphics.setColor(playdate.graphics.kColorWhite)
-        playdate.graphics.fillRect(X, Y + 50, 400 - X, 20)
-        playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    title = function(self, title)
+        self.clear(X + 40, Y, 400 - X + 40, 20)
+        playdate.graphics.drawText(title, X + 40, Y)
+    end,
+
+    song = function(self, song)
+        self.clear(X, Y + 50, 400 - X, 20)
         playdate.graphics.drawText(song, X, Y + 50)
     end,
 
-    draw_artist = function(artist)
-        playdate.graphics.drawText("*Artist:*", X, Y + 80)
-        playdate.graphics.setColor(playdate.graphics.kColorWhite)
-        playdate.graphics.fillRect(X, Y + 100, 400 - X, 20)
-        playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    artist = function(self, artist)
+        self.clear(X, Y + 100, 400 - X, 20)
         playdate.graphics.drawText(artist, X, Y + 100)
     end,
 
-    draw_album = function(album)
-        playdate.graphics.drawText("*Album:*", X, Y + 130)
-        playdate.graphics.setColor(playdate.graphics.kColorWhite)
-        playdate.graphics.fillRect(X, Y + 150, 400 - X, 20)
-        playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    album = function(self, album)
+        self.clear(X, Y + 150, 400 - X, 20)
         playdate.graphics.drawText(album, X, Y + 150)
     end,
 
-    draw_bmp = function(bmp)
+    splash = function(self)
+        local img = playdate.graphics.image.new("assets/splash")
+        self.clear(0, 0, 200, 200)
+        img:draw(0, 0)
+
+        playdate.graphics.drawText("*Song:*", X, Y + 30)
+        self:song("Unknown Song")
+
+        playdate.graphics.drawText("*Artist:*", X, Y + 80)
+        self:artist("Unknown Artist")
+
+        playdate.graphics.drawText("*Album:*", X, Y + 130)
+        self:album("Unknown Album")
+    end,
+
+    image = function(self, bmp)
         -- read a little-endian u32 at 1-indexed position
         local function u32(pos)
             local b1, b2, b3, b4 = string.byte(bmp, pos, pos + 3)

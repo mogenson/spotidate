@@ -12,22 +12,12 @@ fetch = a.wrap(function(url, options, cb)
     end
 
     req:setRequestCompleteCallback(function()
-        printf("request complete for %s", path)
-        local status = req:getResponseStatus()
         local err = req:getError()
-        local response = nil
-        if err then
-            printf("network request error: %s", err)
-        else
-            response = req:read()
-        end
-        req:close()
-        req = nil
-        return cb and cb(err or response, status)
+        if err then printf("network request error: %s", err) end
+        return cb and cb(err or req:read(), req:getResponseStatus())
     end)
 
     local ok, err = req:query(options.method or "GET", path, options.headers, options.body)
-    printf("request made to %s", path)
     if not ok then
         printf("network query error: %s", err)
         return cb and cb()
