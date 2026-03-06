@@ -14,6 +14,11 @@ local blitline = import("blitline")
 local draw = import("draw")
 
 local TITLE = "*Now Playing* %s"
+local A_BUTTON = "AButtonDown"
+local B_BUTTON = "BButtonDown"
+local LEFT_BUTTON = "leftButtonDown"
+local RIGHT_BUTTON = "rightButtonDown"
+local REFRESH = "refresh"
 
 function playdate.update()
     playdate.timer.updateTimers()
@@ -28,38 +33,20 @@ local dispatch = a.wrap(function(fn, cb)
     end)
 end)
 
-local input = a.wrap(function(name, cb)
-    playdate.inputHandlers.push({
-        [name] = function(...)
+local input = a.wrap(function(names, cb)
+    local handlers = {}
+    for _, name in ipairs(names) do
+        handlers[name] = function()
             playdate.inputHandlers.pop()
-            return cb and cb(...)
+            return cb and cb(name)
         end
-    })
+    end
+    playdate.inputHandlers.push(handlers)
 end)
 
--- main async function
-local main = a.sync(function()
-    playdate.display.setRefreshRate(10)
-    playdate.setAutoLockDisabled(true)
-
-    print("wait for network on")
-    local err = a.wait(a.wrap(playdate.network.setEnabled)(true))
-    if err then
-        printf("network enable error: %s", err)
-        return
-    end
-
-    draw:splash()
-    draw:title(TITLE:format(""))
-
-    print("request network access")
-    a.wait(dispatch(playdate.network.http.requestAccess))
-
-    a.wait(spotify:init(secrets))
+-- poll spotify for currently playing song
+local spotify_task = a.sync(function(spotify, rx)
     blitline:init(secrets)
-
-    -- print("press A for Spotify test")
-    -- a.wait(input("AButtonDown"))
 
     local image_url = "" -- only convert new images
 
@@ -90,9 +77,77 @@ local main = a.sync(function()
         end
         for i = 10, 1, -1 do
             draw:title(TITLE:format(i % 2 == 0 and "." or ""))
-            a.wait(sleep(1000)) -- sleep 1 second
+            local cmd = a.wait(a.select({ rx:recv(), sleep(1000) }))
+            if cmd[1] == REFRESH then break end
         end
     end
+end)
+
+-- respond to button presses
+local button_task = a.sync(function(spotify, tx)
+    local y, w, h = 210, 80, 20
+    local lx, rx, bx, ax = 20, 120, 220, 320
+    while true do
+        playdate.graphics.drawText("⬅️ prev", lx, y)
+        playdate.graphics.drawText("➡️ next", rx, y)
+        playdate.graphics.drawText("Ⓑ stop", bx, y)
+        playdate.graphics.drawText("Ⓐ play", ax, y)
+
+        local button = a.wait(input({
+            A_BUTTON,
+            B_BUTTON,
+            LEFT_BUTTON,
+            RIGHT_BUTTON
+        }))
+        printf("Button pressed: %s", button)
+        if button == A_BUTTON then
+            draw.clear(ax, y, w, h)
+            playdate.graphics.drawText("Ⓐ *play*", ax, y)
+            a.wait(spotify:play())
+            draw.clear(ax, y, w, h)
+        elseif button == B_BUTTON then
+            draw.clear(bx, y, w, h)
+            playdate.graphics.drawText("Ⓑ *stop*", bx, y)
+            a.wait(spotify:pause())
+            draw.clear(bx, y, w, h)
+        elseif button == LEFT_BUTTON then
+            draw.clear(lx, y, w, h)
+            playdate.graphics.drawText("⬅️ *prev*", lx, y)
+            a.wait(spotify:previous())
+            a.wait(tx:send(REFRESH))
+            draw.clear(lx, y, w, h)
+        elseif button == RIGHT_BUTTON then
+            draw.clear(rx, y, w, h)
+            playdate.graphics.drawText("➡️ *next*", rx, y)
+            a.wait(spotify:next())
+            a.wait(tx:send(REFRESH))
+            draw.clear(rx, y, w, h)
+        end
+    end
+end)
+
+-- main async function
+local main = a.sync(function()
+    playdate.display.setRefreshRate(10)
+    playdate.setAutoLockDisabled(true)
+
+    print("wait for network on")
+    local err = a.wait(a.wrap(playdate.network.setEnabled)(true))
+    if err then
+        printf("network enable error: %s", err)
+        return
+    end
+
+    draw:splash()
+    draw:title(TITLE:format(""))
+
+    print("request network access")
+    a.wait(dispatch(playdate.network.http.requestAccess))
+
+    a.wait(spotify:init(secrets))
+
+    local tx, rx = a.channel()
+    a.wait(a.gather({ spotify_task(spotify, rx), button_task(spotify, tx) }))
 end)
 
 a.run(main())

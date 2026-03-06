@@ -1,3 +1,5 @@
+local PLAYER_API = "https://api.spotify.com/v1/me/player/%s"
+
 return {
     access_token = nil,
     client_id = nil,
@@ -28,9 +30,53 @@ return {
         self.access_token = json.decode(response).access_token
     end),
 
+    play = a.sync(function(self)
+        local _, status = a.wait(fetch(PLAYER_API:format("play"), {
+            method = "PUT",
+            headers = {
+                string.format("Authorization: Bearer %s", self.access_token),
+                "Content-Length: 0"
+            }
+        }))
+        printf("play status: %d", status)
+    end),
+
+    pause = a.sync(function(self)
+        local _, status = a.wait(fetch(PLAYER_API:format("pause"), {
+            method = "PUT",
+            headers = {
+                string.format("Authorization: Bearer %s", self.access_token),
+                "Content-Length: 0"
+            }
+        }))
+        printf("pause status: %d", status)
+    end),
+
+    next = a.sync(function(self)
+        local _, status = a.wait(fetch(PLAYER_API:format("next"), {
+            method = "POST",
+            headers = {
+                string.format("Authorization: Bearer %s", self.access_token),
+                "Content-Length: 0"
+            }
+        }))
+        printf("next status: %d", status)
+    end),
+
+    previous = a.sync(function(self)
+        local _, status = a.wait(fetch(PLAYER_API:format("previous"), {
+            method = "POST",
+            headers = {
+                string.format("Authorization: Bearer %s", self.access_token),
+                "Content-Length: 0"
+            }
+        }))
+        printf("previous status: %d", status)
+    end),
+
     get_currently_playing = a.sync(function(self)
         while true do
-            local response, status = a.wait(fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+            local response, status = a.wait(fetch(PLAYER_API:format("currently-playing"), {
                 headers = string.format("Authorization: Bearer %s", self.access_token)
             }))
             if status == 401 then
