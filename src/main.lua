@@ -45,7 +45,7 @@ local input = a.wrap(function(names, cb)
 end)
 
 -- poll spotify for currently playing song
-local spotify_task = a.sync(function(spotify, rx)
+local spotify_task = a.sync(function(client, rx)
     blitline:init(secrets)
 
     local image_url = "" -- only convert new images
@@ -53,7 +53,7 @@ local spotify_task = a.sync(function(spotify, rx)
     while true do
         draw:title(TITLE:format("..."))
         print("fetch currently playing track")
-        local track = a.wait(spotify:get_currently_playing())
+        local track = a.wait(client:get_currently_playing())
         if track then
             printf("currently playing song: %s", track.song)
             printf("currently playing artist: %s", track.artist)
@@ -84,7 +84,7 @@ local spotify_task = a.sync(function(spotify, rx)
 end)
 
 -- respond to button presses
-local button_task = a.sync(function(spotify, tx)
+local button_task = a.sync(function(client, tx)
     local y, w, h = 210, 80, 20
     local lx, rx, bx, ax = 20, 120, 220, 320
     while true do
@@ -103,23 +103,23 @@ local button_task = a.sync(function(spotify, tx)
         if button == A_BUTTON then
             draw.clear(ax, y, w, h)
             playdate.graphics.drawText("Ⓐ *play*", ax, y)
-            a.wait(spotify:play())
+            a.wait(client:play())
             draw.clear(ax, y, w, h)
         elseif button == B_BUTTON then
             draw.clear(bx, y, w, h)
             playdate.graphics.drawText("Ⓑ *stop*", bx, y)
-            a.wait(spotify:pause())
+            a.wait(client:pause())
             draw.clear(bx, y, w, h)
         elseif button == LEFT_BUTTON then
             draw.clear(lx, y, w, h)
             playdate.graphics.drawText("⬅️ *prev*", lx, y)
-            a.wait(spotify:previous())
+            a.wait(client:previous())
             a.wait(tx:send(REFRESH))
             draw.clear(lx, y, w, h)
         elseif button == RIGHT_BUTTON then
             draw.clear(rx, y, w, h)
             playdate.graphics.drawText("➡️ *next*", rx, y)
-            a.wait(spotify:next())
+            a.wait(client:next())
             a.wait(tx:send(REFRESH))
             draw.clear(rx, y, w, h)
         end

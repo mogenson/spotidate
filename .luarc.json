@@ -1,0 +1,10 @@
+{
+  "runtime.version": "Lua5.4",
+  "diagnostics": {
+    "neededFileStatus": { "codestyle-check": "Any" },
+    "disable": ["undefined-global", "lowercase-global", "duplicate-set-field"],
+  },
+  "workspace": {
+    "library": [ "definitions" ],
+  }
+}

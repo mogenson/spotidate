@@ -14,7 +14,7 @@ fetch = a.wrap(function(url, options, cb)
     req:setRequestCompleteCallback(function()
         local err = req:getError()
         if err then printf("network request error: %s", err) end
-        return cb and cb(err or req:read(), req:getResponseStatus())
+        return cb and cb(err or req:read(math.huge), req:getResponseStatus())
     end)
 
     local ok, err = req:query(options.method or "GET", path, options.headers, options.body)

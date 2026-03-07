@@ -31,7 +31,7 @@ return {
     splash = function(self)
         local img = playdate.graphics.image.new("assets/splash")
         self.clear(0, 0, 200, 200)
-        img:draw(0, 0)
+        assert(img):draw(0, 0)
 
         playdate.graphics.drawText("*Song:*", X, Y + 30)
         self:song("Unknown Song")
@@ -43,7 +43,7 @@ return {
         self:album("Unknown Album")
     end,
 
-    image = function(self, bmp)
+    image = function(_, bmp)
         -- read a little-endian u32 at 1-indexed position
         local function u32(pos)
             local b1, b2, b3, b4 = string.byte(bmp, pos, pos + 3)
