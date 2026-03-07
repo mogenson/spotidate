@@ -1,4 +1,4 @@
-local PLAYER_API = "https://api.spotify.com/v1/me/player/%s"
+local WEB_PLAYER_API = "https://api.spotify.com/v1/me/player/%s"
 
 return {
     access_token = nil,
@@ -31,7 +31,7 @@ return {
     end),
 
     play = a.sync(function(self)
-        local _, status = a.wait(fetch(PLAYER_API:format("play"), {
+        local response, status = a.wait(fetch(WEB_PLAYER_API:format("play"), {
             method = "PUT",
             headers = {
                 string.format("Authorization: Bearer %s", self.access_token),
@@ -39,10 +39,11 @@ return {
             }
         }))
         printf("play status: %d", status)
+        if status ~= 200 then printf("play response: %s", response) end
     end),
 
     pause = a.sync(function(self)
-        local _, status = a.wait(fetch(PLAYER_API:format("pause"), {
+        local response, status = a.wait(fetch(WEB_PLAYER_API:format("pause"), {
             method = "PUT",
             headers = {
                 string.format("Authorization: Bearer %s", self.access_token),
@@ -50,10 +51,11 @@ return {
             }
         }))
         printf("pause status: %d", status)
+        if status ~= 200 then printf("pause response: %s", response) end
     end),
 
     next = a.sync(function(self)
-        local _, status = a.wait(fetch(PLAYER_API:format("next"), {
+        local response, status = a.wait(fetch(WEB_PLAYER_API:format("next"), {
             method = "POST",
             headers = {
                 string.format("Authorization: Bearer %s", self.access_token),
@@ -61,10 +63,11 @@ return {
             }
         }))
         printf("next status: %d", status)
+        if status ~= 200 then printf("next response: %s", response) end
     end),
 
     previous = a.sync(function(self)
-        local _, status = a.wait(fetch(PLAYER_API:format("previous"), {
+        local response, status = a.wait(fetch(WEB_PLAYER_API:format("previous"), {
             method = "POST",
             headers = {
                 string.format("Authorization: Bearer %s", self.access_token),
@@ -72,11 +75,12 @@ return {
             }
         }))
         printf("previous status: %d", status)
+        if status ~= 200 then printf("previous response: %s", response) end
     end),
 
     get_currently_playing = a.sync(function(self)
         while true do
-            local response, status = a.wait(fetch(PLAYER_API:format("currently-playing"), {
+            local response, status = a.wait(fetch(WEB_PLAYER_API:format("currently-playing"), {
                 headers = string.format("Authorization: Bearer %s", self.access_token)
             }))
             if status == 401 then
