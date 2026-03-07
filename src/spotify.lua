@@ -1,11 +1,33 @@
 local WEB_PLAYER_API = "https://api.spotify.com/v1/me/player/%s"
 
+---@class Track
+---@field song string Track name
+---@field artist string Primary artist name
+---@field album string Album name
+---@field image string URL of the largest album cover image
+
+---@class SpotifyClient
+---@field access_token string? OAuth access token
+---@field client_id string? Spotify app client ID
+---@field client_secret string? Spotify app client secret
+---@field refresh_token string? OAuth refresh token
+---@field init fun(self: SpotifyClient, secrets: Secrets): fun(cb: function) Initialize credentials and fetch an access token
+---@field refresh_access_token fun(self: SpotifyClient): fun(cb: function) Refresh the OAuth access token
+---@field play fun(self: SpotifyClient): fun(cb: function) Resume playback
+---@field pause fun(self: SpotifyClient): fun(cb: function) Pause playback
+---@field next fun(self: SpotifyClient): fun(cb: function) Skip to next track
+---@field previous fun(self: SpotifyClient): fun(cb: function) Skip to previous track
+---@field get_currently_playing fun(self: SpotifyClient): fun(cb: function) Get the currently playing track
+
 return {
     access_token = nil,
     client_id = nil,
     client_secret = nil,
     refresh_token = nil,
 
+    --- Initialize the Spotify client with credentials and refresh the access token.
+    ---@param self SpotifyClient
+    ---@param secrets Secrets
     init = a.sync(function(self, secrets)
         self.client_id = assert(secrets.client_id)
         self.client_secret = assert(secrets.client_secret)
@@ -13,6 +35,8 @@ return {
         a.wait(self:refresh_access_token())
     end),
 
+    --- Refresh the OAuth access token using the stored refresh token.
+    ---@param self SpotifyClient
     refresh_access_token = a.sync(function(self)
         print("refreshing spotify token")
         local response, status = a.wait(fetch("https://accounts.spotify.com/api/token", {
@@ -30,6 +54,8 @@ return {
         self.access_token = json.decode(response).access_token
     end),
 
+    --- Resume playback on the active Spotify device.
+    ---@param self SpotifyClient
     play = a.sync(function(self)
         local response, status = a.wait(fetch(WEB_PLAYER_API:format("play"), {
             method = "PUT",
@@ -42,6 +68,8 @@ return {
         if status ~= 200 then printf("play response: %s", response) end
     end),
 
+    --- Pause playback on the active Spotify device.
+    ---@param self SpotifyClient
     pause = a.sync(function(self)
         local response, status = a.wait(fetch(WEB_PLAYER_API:format("pause"), {
             method = "PUT",
@@ -54,6 +82,8 @@ return {
         if status ~= 200 then printf("pause response: %s", response) end
     end),
 
+    --- Skip to the next track on the active Spotify device.
+    ---@param self SpotifyClient
     next = a.sync(function(self)
         local response, status = a.wait(fetch(WEB_PLAYER_API:format("next"), {
             method = "POST",
@@ -66,6 +96,8 @@ return {
         if status ~= 200 then printf("next response: %s", response) end
     end),
 
+    --- Skip to the previous track on the active Spotify device.
+    ---@param self SpotifyClient
     previous = a.sync(function(self)
         local response, status = a.wait(fetch(WEB_PLAYER_API:format("previous"), {
             method = "POST",
@@ -78,6 +110,10 @@ return {
         if status ~= 200 then printf("previous response: %s", response) end
     end),
 
+    --- Fetch the currently playing track from Spotify. Automatically refreshes
+    --- the access token on 401 responses.
+    ---@param self SpotifyClient
+    ---@return Track? track The currently playing track, or nil if nothing is playing
     get_currently_playing = a.sync(function(self)
         while true do
             local response, status = a.wait(fetch(WEB_PLAYER_API:format("currently-playing"), {

@@ -8,10 +8,16 @@ import("printf")
 import("assert")
 import("fetch")
 
-local secrets = import("secrets")
-local spotify = import("spotify")
-local blitline = import("blitline")
-local draw = import("draw")
+---@class Secrets
+---@field client_id string Spotify app client ID
+---@field client_secret string Spotify app client secret
+---@field refresh_token string Spotify OAuth refresh token
+---@field app_id string Blitline application ID
+
+local secrets = import("secrets") ---@type Secrets
+local spotify = import("spotify") ---@type SpotifyClient
+local blitline = import("blitline") ---@type Blitline
+local draw = import("draw") ---@type Draw
 
 local TITLE = "*Now Playing* %s"
 local A_BUTTON = "AButtonDown"
@@ -20,19 +26,28 @@ local LEFT_BUTTON = "leftButtonDown"
 local RIGHT_BUTTON = "rightButtonDown"
 local REFRESH = "refresh"
 
+--- Main update callback; advances all active timers each frame.
 function playdate.update()
     playdate.timer.updateTimers()
 end
 
--- async functions
+--- Async sleep for the given duration in milliseconds.
+---@param duration integer Milliseconds to sleep
+---@return fun(cb: function) future A future that resolves after the timer fires
 local sleep = a.wrap(playdate.timer.new)
 
+--- Dispatch a synchronous function to run on the next frame and return its result async.
+---@param fn function The function to call
+---@param cb? function Callback receiving the function's return value
 local dispatch = a.wrap(function(fn, cb)
     playdate.timer.new(0, function()
         return cb(fn())
     end)
 end)
 
+--- Wait for one of the named input buttons to be pressed and return its name.
+---@param names string[] List of input handler names to listen for
+---@param cb? fun(name: string) Callback receiving the name of the pressed button
 local input = a.wrap(function(names, cb)
     local handlers = {}
     for _, name in ipairs(names) do
@@ -44,7 +59,11 @@ local input = a.wrap(function(names, cb)
     playdate.inputHandlers.push(handlers)
 end)
 
--- poll spotify for currently playing song
+--- Poll Spotify for the currently playing song, update the display,
+--- and convert album art via Blitline. Loops with a 10-second refresh interval
+--- that can be interrupted via the rx channel.
+---@param client SpotifyClient The authenticated Spotify client
+---@param rx Receiver Channel receiver to listen for refresh signals
 local spotify_task = a.sync(function(client, rx)
     blitline:init(secrets)
 
@@ -83,7 +102,10 @@ local spotify_task = a.sync(function(client, rx)
     end
 end)
 
--- respond to button presses
+--- Handle button presses for playback controls (play, pause, next, previous).
+--- Sends a refresh signal via tx after skip actions.
+---@param client SpotifyClient The authenticated Spotify client
+---@param tx Sender Channel sender to signal the spotify_task to refresh
 local button_task = a.sync(function(client, tx)
     local y, w, h = 210, 80, 20
     local lx, rx, bx, ax = 20, 120, 220, 320
@@ -126,7 +148,8 @@ local button_task = a.sync(function(client, tx)
     end
 end)
 
--- main async function
+--- App entry point. Enables networking, requests access, initializes Spotify,
+--- and runs the song-polling and button-handling tasks concurrently.
 local main = a.sync(function()
     playdate.display.setRefreshRate(10)
     playdate.setAutoLockDisabled(true)

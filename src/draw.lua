@@ -1,6 +1,20 @@
 local X = 210
 local Y = 10
 
+---@class Draw
+---@field clear fun(x: integer, y: integer, w: integer, h: integer) Clear a rectangular region by filling it white
+---@field title fun(self: Draw, title: string) Draw the title text in the header area
+---@field song fun(self: Draw, song: string) Draw the song name
+---@field artist fun(self: Draw, artist: string) Draw the artist name
+---@field album fun(self: Draw, album: string) Draw the album name
+---@field splash fun(self: Draw) Draw the splash screen with placeholder labels
+---@field image fun(self: Draw, bmp: string) Decode a 1-bit BMP and draw it as a Playdate bitmap
+
+--- Clear a rectangular region by filling it with white.
+---@param x integer Left edge
+---@param y integer Top edge
+---@param w integer Width
+---@param h integer Height
 return {
     clear = function(x, y, w, h)
         playdate.graphics.setColor(playdate.graphics.kColorWhite)
@@ -8,26 +22,40 @@ return {
         playdate.graphics.setColor(playdate.graphics.kColorBlack)
     end,
 
+    --- Draw the title text in the header area.
+    ---@param self Draw
+    ---@param title string The title text to display
     title = function(self, title)
         self.clear(X + 40, Y, 400 - X + 40, 20)
         playdate.graphics.drawText(title, X + 40, Y)
     end,
 
+    --- Draw the song name below the title.
+    ---@param self Draw
+    ---@param song string The song name to display
     song = function(self, song)
         self.clear(X, Y + 50, 400 - X, 20)
         playdate.graphics.drawText(song, X, Y + 50)
     end,
 
+    --- Draw the artist name below the song.
+    ---@param self Draw
+    ---@param artist string The artist name to display
     artist = function(self, artist)
         self.clear(X, Y + 100, 400 - X, 20)
         playdate.graphics.drawText(artist, X, Y + 100)
     end,
 
+    --- Draw the album name below the artist.
+    ---@param self Draw
+    ---@param album string The album name to display
     album = function(self, album)
         self.clear(X, Y + 150, 400 - X, 20)
         playdate.graphics.drawText(album, X, Y + 150)
     end,
 
+    --- Draw the splash screen with album art placeholder and default labels.
+    ---@param self Draw
     splash = function(self)
         local img = playdate.graphics.image.new("assets/splash")
         self.clear(0, 0, 200, 200)
@@ -43,6 +71,9 @@ return {
         self:album("Unknown Album")
     end,
 
+    --- Decode a 1-bit BMP byte string and draw it as a Playdate bitmap at (0,0).
+    ---@param _ Draw
+    ---@param bmp string Raw BMP file data
     image = function(_, bmp)
         -- read a little-endian u32 at 1-indexed position
         local function u32(pos)
