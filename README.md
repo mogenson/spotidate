@@ -2,8 +2,8 @@
 
 A Spotify remote control for the [Playdate](https://play.date) handheld console. View the currently playing track, album art, and control playback — all from the crank-equipped little yellow device.
 
-![SpotiDate screenshot](screenshot.png)
-<!-- TODO: add screenshot -->
+<img width="487" height="416" alt="playdate-spotify-screenshot" src="https://github.com/user-attachments/assets/0b972620-5e67-4d98-955d-a865e84e02a4" />
+
 
 ## Overview
 
